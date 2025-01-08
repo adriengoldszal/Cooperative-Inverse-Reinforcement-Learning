@@ -77,10 +77,10 @@ def run_experiment(results_path, n_trials: int = 2, grid_size: int = 10, horizon
                 n_states = grid_size * grid_size
                                 
                 # Define terminal states 
-                terminal_states = []
-                for center in env.feature_centers:
-                    center_idx = int(center[0]) * env.size + int(center[1])
-                    terminal_states.append(center_idx)
+                trajectory_obj = Trajectory(trajectory)
+                trajectory_obj.grid_size = env.size
+                final_state_idx = trajectory_obj.states()[-1]  # Get the last state index
+                terminal_states = [final_state_idx]
                     
                 theta_hat = robot.estimated_theta
                 theta_gt = true_theta

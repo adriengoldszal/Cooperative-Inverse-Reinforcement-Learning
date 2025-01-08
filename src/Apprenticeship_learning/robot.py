@@ -1,7 +1,7 @@
 from gridworld import GridWorld
 from maxent_utils.maxent_wrapper import Trajectory
 from maxent_utils.maxent import irl_causal
-from maxent_utils.maxent_wrapper import Optimizer, Initializer
+from maxent_utils.maxent_wrapper import ExpSga, linear_decay, Optimizer, Initializer
 import numpy as np
 from typing import List, Tuple
 from valueiterationplanner import ValueIterationPlanner
@@ -41,15 +41,15 @@ class RobotLearner:
         
         
         # Define terminal states 
-        terminal_states = []
-        for center in self.env.feature_centers:
-            center_idx = int(center[0]) * self.env.size + int(center[1])
-            terminal_states.append(center_idx)
+        final_state, _ = trajectory_data[-1]  # Get last (state, action) pair
+        final_state_idx = int(final_state[0]) * self.env.size + int(final_state[1])
+        terminal_states = [final_state_idx]
 
         print(f'Terminal states: {terminal_states}')
         
         # Setup optimization
-        optim = Optimizer(learning_rate=0.0001)
+        optim = ExpSga(lr=0.2).normalize_grad()
+        #optim = ExpSga(lr=linear_decay(lr0=0.1))
         init = Initializer(low=-1, high=1)
         
         # Run MaxEnt IRL
@@ -62,9 +62,9 @@ class RobotLearner:
             optim=optim,
             init=init,
             discount=0.95,  # Add discount factor for stability
-            eps=1e-3,
-            eps_svf=1e-4,
-            eps_lap=1e-4,
+            eps=1e-4,
+            eps_svf=1e-5,
+            eps_lap=1e-5,
         )
         print(f'Running finished. Estimated theta: {self.estimated_theta}')
     
